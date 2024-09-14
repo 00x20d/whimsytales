@@ -7,7 +7,7 @@ export default function OnboardingStep1() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("@/src/assets/images/logo-final.png")}
+        source={require("../../src/assets/images/logo-final.png")}
         style={styles.logo}
       />
       <Text style={styles.title}>Time To Start.</Text>
