@@ -51,8 +51,12 @@ function AppContent() {
     const handleDeepLink = (event: { url: string }) => {
       console.log("Received deep link:", event.url);
       if (event.url.includes("auth/callback")) {
-        // Handle the authentication callback
-        router.replace("/"); // or wherever you want to redirect after successful login
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            dispatch(setUser(session.user));
+            router.replace("/onboarding/step1");
+          }
+        });
       }
     };
 
@@ -61,7 +65,7 @@ function AppContent() {
     return () => {
       Linking.removeAllListeners("url");
     };
-  }, [router]);
+  }, [router, dispatch]);
 
   if (!loaded) {
     return null;
