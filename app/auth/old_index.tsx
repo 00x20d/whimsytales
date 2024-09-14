@@ -7,7 +7,7 @@ const AuthScreen = () => {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={require("@/src/assets/images/logo-final.png")}
+          source={require("../../src/assets/images/logo-final.png")}
           style={styles.logo}
         />
       </View>
