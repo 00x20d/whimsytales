@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>whimsytales.app</string>
+          <string>whimsytales</string>
           <string>com.ios</string>
         </array>
       </dict>

@@ -23,13 +23,9 @@ const AuthScreen = () => {
           style={styles.button}
           onPress={() => {
             console.log("Google Sign-In button pressed");
-            signInWithGoogle();
           }}
-          disabled={isLoading}
         >
-          <Text style={styles.buttonText}>
-            {isLoading ? "Signing In..." : "Sign In"}
-          </Text>
+          <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
