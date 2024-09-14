@@ -1,11 +1,12 @@
 {
   "expo": {
+    "entryPoint": "./index.js",
     "name": "whimsytales",
     "slug": "whimsytales",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "icon": "@/src/assets/images/logo-final.png",
+    "scheme": "whimsytales",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -17,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo-final.png",
         "backgroundColor": "#ffffff"
       }
     },
@@ -27,10 +28,24 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.553900314913-fphke0i23f1ovdlm4kgnsf74tl53fl1d.apps.googleusercontent.com"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e821a2bb-6862-4438-b717-71810215133e"
+      }
+    },
+    "owner": "0x20d-org"
   }
 }
