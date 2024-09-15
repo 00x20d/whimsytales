@@ -16,6 +16,7 @@ import { useColorScheme } from "../src/hooks/useColorScheme";
 import { setUser } from "../src/store/slices/authSlice";
 import { Linking } from "react-native";
 import { useRouter } from "expo-router";
+import { checkMainAvatarExists } from "../src/utils/avatarUtils";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,12 +35,27 @@ function AppContent() {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        //console.log("Auth state changed:", event, session);
         if (event === "SIGNED_IN" && session) {
+          //console.log("User signed in:", session.user);
           dispatch(setUser(session.user));
-          router.replace("/onboarding/step1");
+          try {
+            const hasMainAvatar = await checkMainAvatarExists(session.user.id);
+            console.log("Has main avatar:", hasMainAvatar);
+            if (hasMainAvatar) {
+              console.log("Attempting to navigate to dashboard");
+              await router.replace("/(tabs)/dashboard");
+            } else {
+              console.log("Attempting to navigate to onboarding");
+              await router.replace("/onboarding/step1");
+            }
+          } catch (error) {
+            console.error("Error during navigation:", error);
+          }
         } else if (event === "SIGNED_OUT") {
+          console.log("User signed out");
           dispatch(setUser(null));
-          router.replace("/");
+          await router.replace("/");
         }
       }
     );

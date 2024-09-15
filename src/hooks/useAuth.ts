@@ -4,7 +4,6 @@ import { setUser, setLoading, setError } from "../store/slices/authSlice";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { makeRedirectUri } from "expo-auth-session";
-import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 
 export const useAuth = () => {
@@ -60,6 +59,7 @@ export const useAuth = () => {
           data.url,
           redirectUrl
         );
+        console.log("WebBrowser result:", result);
         if (result.type === "success" && result.url) {
           console.log("Auth session success, URL:", result.url);
           const accessToken = result.url
@@ -88,12 +88,13 @@ export const useAuth = () => {
 
               // Update Redux store
               dispatch(setUser(user));
+              console.log("User set in Redux:", user);
             }
           } else {
             console.error("Failed to extract tokens from URL");
           }
         } else {
-          console.log("Auth session result:", result);
+          console.log("Auth session failed or cancelled");
         }
       } else {
         console.log("No URL returned from signInWithOAuth");

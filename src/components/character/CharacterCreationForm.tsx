@@ -22,7 +22,6 @@ export default function CharacterCreationForm({
   const [age, setAge] = useState("");
   const [interests, setInterests] = useState("");
   const [gender, setGender] = useState("");
-  const { user } = useAuth();
 
   const handleCreateCharacter = async () => {
     if (!name || !age || !interests || !gender) {
@@ -30,28 +29,15 @@ export default function CharacterCreationForm({
       return;
     }
 
-    const now = new Date().toISOString();
     const character = {
-      user_id: user?.id,
       name,
       age: parseInt(age),
       interests: interests.split(",").map((interest) => interest.trim()),
       gender,
-      is_main: true,
-      created_at: now,
-      updated_at: now,
     };
 
     try {
-      const { data, error } = await supabase
-        .from("Character")
-        .insert(character);
-
-      if (error) throw error;
-
-      console.log("Character created:", data);
-      Alert.alert("Success", "Character created successfully!");
-      onSuccess(data);
+      onSuccess(character);
     } catch (error) {
       console.error("Error creating character:", error);
       if (error instanceof Error) {
@@ -98,7 +84,14 @@ export default function CharacterCreationForm({
           ]}
           onPress={() => setGender("boy")}
         >
-          <Text style={styles.genderText}>boy</Text>
+          <Text
+            style={[
+              styles.genderText,
+              gender === "boy" && { color: COLORS.primary },
+            ]}
+          >
+            boy
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -107,7 +100,14 @@ export default function CharacterCreationForm({
           ]}
           onPress={() => setGender("girl")}
         >
-          <Text style={styles.genderText}>girl</Text>
+          <Text
+            style={[
+              styles.genderText,
+              gender === "girl" && { color: COLORS.primary },
+            ]}
+          >
+            girl
+          </Text>
         </TouchableOpacity>
       </View>
 

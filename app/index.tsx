@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "expo-router/entry";
 import {
   View,
@@ -10,14 +10,44 @@ import {
   TextInput,
 } from "react-native";
 import { COLORS, FONTS } from "../constants/theme";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
+import { useUser } from "@supabase/auth-helpers-react";
+import { ActivityIndicator } from "react-native";
 import { supabase } from "../src/lib/supabase";
+import { checkMainAvatarExists } from "../src/utils/avatarUtils";
 
 const AuthScreen = () => {
   const { signInWithGoogle, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isCheckingAvatar, setIsCheckingAvatar] = useState(true);
+  const router = useRouter();
+  const user = useUser();
+
+  useEffect(() => {
+    async function checkUserAndAvatar() {
+      //console.log("Checking user and avatar, user:", user);
+      if (user) {
+        try {
+          const hasMainAvatar = await checkMainAvatarExists(user.id);
+          console.log("Has main avatar:", hasMainAvatar);
+          if (hasMainAvatar) {
+            console.log("Attempting to navigate to dashboard from AuthScreen");
+            await router.replace("/(tabs)/dashboard");
+          } else {
+            console.log("Attempting to navigate to onboarding from AuthScreen");
+            await router.replace("/onboarding/step1");
+          }
+        } catch (error) {
+          console.error("Error during navigation from AuthScreen:", error);
+        }
+      }
+      setIsCheckingAvatar(false);
+    }
+
+    checkUserAndAvatar();
+  }, [user, router]);
 
   const handleSignUp = async () => {
     if (!email || !password) {
@@ -33,12 +63,21 @@ const AuthScreen = () => {
       if (error) throw error;
 
       Alert.alert("Success", "Check your email for the confirmation link");
+      router.replace("/onboarding/step1");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       Alert.alert("Error", errorMessage);
     }
   };
+
+  if (isLoading || isCheckingAvatar) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size='large' color={COLORS.highlight} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

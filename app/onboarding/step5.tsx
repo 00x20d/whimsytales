@@ -4,14 +4,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, FONTS } from "../../constants/theme";
 import CharacterCreationForm from "../../src/components/character/CharacterCreationForm";
 import { useRouter } from "expo-router";
+import { supabase } from "../../src/lib/supabase";
+import { useUser } from "@supabase/auth-helpers-react";
 
 export default function CreateCharacter() {
   const router = useRouter();
+  const user = useUser();
 
-  const handleCharacterCreated = (character: any) => {
+  console.log("User", user);
+
+  const handleCharacterCreated = async (character: any) => {
     console.log("Character created:", character);
-    // Navigate to the next screen or home screen
-    router.push("/onboarding/step5"); // Adjust this route as needed
+    try {
+      const { data, error } = await supabase
+        .from("avatars")
+        .insert({ ...character, user_id: user?.id, is_main: true });
+
+      if (error) {
+        console.error("Error creating avatar:", error);
+        console.log("Error", `Failed to create avatar: ${error.message}`);
+      } else {
+        console.log("Avatar created successfully:", data);
+        router.replace("/(tabs)/dashboard");
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      console.log("Error", "An unexpected error occurred");
+    }
   };
 
   return (
