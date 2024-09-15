@@ -1,8 +1,6 @@
 import "react-native-url-polyfill/auto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
-import { makeRedirectUri } from "expo-auth-session";
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => {

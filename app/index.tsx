@@ -1,13 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import "expo-router/entry";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Alert,
+  TextInput,
+} from "react-native";
 import { COLORS, FONTS } from "../constants/theme";
 import { Link } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
+import { supabase } from "../src/lib/supabase";
 
 const AuthScreen = () => {
   const { signInWithGoogle, isLoading } = useAuth();
-  console.log("signInWithGoogle function:", signInWithGoogle);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignUp = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) throw error;
+
+      Alert.alert("Success", "Check your email for the confirmation link");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      Alert.alert("Error", errorMessage);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -19,13 +50,25 @@ const AuthScreen = () => {
       </View>
       <View style={styles.formContainer}>
         <Text style={styles.heading}>Whimsy Tales</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            console.log("Google Sign-In button pressed");
-          }}
-        >
-          <Text style={styles.buttonText}>Sign In</Text>
+        <TextInput
+          style={styles.input}
+          placeholder='Email'
+          placeholderTextColor={COLORS.gray}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType='email-address'
+          autoCapitalize='none'
+        />
+        <TextInput
+          style={styles.input}
+          placeholder='Password'
+          placeholderTextColor={COLORS.gray}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up with Email</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
@@ -37,10 +80,10 @@ const AuthScreen = () => {
           </Text>
         </TouchableOpacity>
         <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
+          <Text style={styles.signupText}>Already have an account? </Text>
           <Link href='/onboarding/step1' asChild>
             <TouchableOpacity>
-              <Text style={styles.signupLink}>Sign Up</Text>
+              <Text style={styles.signupLink}>Sign In</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -78,10 +121,11 @@ const styles = StyleSheet.create({
   },
   input: {
     fontFamily: FONTS.regular,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: COLORS.white,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    color: COLORS.primary,
   },
   button: {
     backgroundColor: COLORS.highlight,

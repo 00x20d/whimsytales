@@ -15,7 +15,7 @@ export default function OnboardingStep1() {
         Before you start creating your whimsy tales, let's setup your kids'
         profile.
       </Text>
-      <Link href='/onboarding/step3' asChild>
+      <Link href='/onboarding/step5' asChild>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Let's Do It!</Text>
         </TouchableOpacity>

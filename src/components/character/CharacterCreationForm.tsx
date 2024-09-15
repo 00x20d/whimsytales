@@ -1,0 +1,178 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { COLORS, FONTS } from "../../../constants/theme";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../hooks/useAuth";
+
+interface CharacterCreationFormProps {
+  onSuccess: (data: any) => void;
+}
+
+export default function CharacterCreationForm({
+  onSuccess,
+}: CharacterCreationFormProps) {
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [interests, setInterests] = useState("");
+  const [gender, setGender] = useState("");
+  const { user } = useAuth();
+
+  const handleCreateCharacter = async () => {
+    if (!name || !age || !interests || !gender) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const character = {
+      user_id: user?.id,
+      name,
+      age: parseInt(age),
+      interests: interests.split(",").map((interest) => interest.trim()),
+      gender,
+      is_main: true,
+      created_at: now,
+      updated_at: now,
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from("Character")
+        .insert(character);
+
+      if (error) throw error;
+
+      console.log("Character created:", data);
+      Alert.alert("Success", "Character created successfully!");
+      onSuccess(data);
+    } catch (error) {
+      console.error("Error creating character:", error);
+      if (error instanceof Error) {
+        Alert.alert("Error", `Failed to create character: ${error.message}`);
+      } else {
+        Alert.alert("Error", "Failed to create character. Please try again.");
+      }
+    }
+  };
+
+  return (
+    <View>
+      <TextInput
+        style={styles.input}
+        placeholder="Your kid's name..."
+        value={name}
+        onChangeText={setName}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder='Enter their age...'
+        value={age}
+        onChangeText={setAge}
+        keyboardType='numeric'
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder='Interests: Games, Cartoons, Dogs etc.'
+        value={interests}
+        onChangeText={setInterests}
+      />
+
+      <Text style={styles.label}>Gender*</Text>
+      <Text style={styles.labelDescription}>
+        *used for the correct pronouns in the generated text.
+      </Text>
+      <View style={styles.genderContainer}>
+        <TouchableOpacity
+          style={[
+            styles.genderButton,
+            gender === "boy" && styles.selectedGender,
+          ]}
+          onPress={() => setGender("boy")}
+        >
+          <Text style={styles.genderText}>boy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.genderButton,
+            gender === "girl" && styles.selectedGender,
+          ]}
+          onPress={() => setGender("girl")}
+        >
+          <Text style={styles.genderText}>girl</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handleCreateCharacter}>
+        <Text style={styles.buttonText}>Let's Do It!</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  input: {
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 30,
+  },
+  label: {
+    alignSelf: "flex-start",
+    color: "white",
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  labelDescription: {
+    alignSelf: "flex-start",
+    color: "white",
+    marginBottom: 5,
+    fontSize: 12,
+  },
+  genderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  genderButton: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: COLORS.highlight,
+    borderRadius: 20,
+    paddingVertical: 10,
+    justifyContent: "space-between",
+    flex: 1,
+    paddingHorizontal: 30,
+    marginHorizontal: 5,
+    fontFamily: FONTS.regular,
+  },
+  selectedGender: {
+    backgroundColor: COLORS.highlight,
+  },
+  genderText: {
+    color: COLORS.highlight,
+    textAlign: "center",
+    fontFamily: FONTS.bold,
+  },
+  button: {
+    backgroundColor: COLORS.highlight,
+    padding: 15,
+    marginTop: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: COLORS.primary,
+    fontWeight: "bold",
+  },
+});
