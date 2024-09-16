@@ -62,15 +62,22 @@ model UserGroup {
   @@id([user_id, group_id])
 }
 
+model Moral {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  stories     Story[]
+}
+
 model Story {
-  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String      @db.Uuid
-  group_id        String?     @db.Uuid
-  title           String
-  content         String
-  play_count      Int         @default(0)
-  clap_count      Int         @default(0)
-  moral           String?
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String  @db.Uuid
+  group_id   String? @db.Uuid
+  title      String
+  content    String
+  play_count Int     @default(0)
+  clap_count Int     @default(0)
+
   cover_image_url String?
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
@@ -78,6 +85,8 @@ model Story {
   group           Group?      @relation(fields: [group_id], references: [id])
   story_parts     StoryPart[]
   audio_files     AudioFile[]
+  moral_id        String?     @db.Uuid
+  moral           Moral?      @relation(fields: [moral_id], references: [id])
 }
 
 model StoryPart {

@@ -49,6 +49,46 @@ const AuthScreen = () => {
     checkUserAndAvatar();
   }, [user, router]);
 
+  // useEffect(() => {
+  //   async function checkUserAndAvatar() {
+  //     if (user) {
+  //       try {
+  //         console.log("Checking main avatar for user ID:", user.id);
+  //         const hasMainAvatarPromise = checkMainAvatarExists(user.id);
+
+  //         // Add a 5-second timeout
+  //         const timeoutPromise = new Promise((_, reject) =>
+  //           setTimeout(
+  //             () => reject(new Error("checkMainAvatarExists timed out")),
+  //             5000
+  //           )
+  //         );
+
+  //         const hasMainAvatar = await Promise.race([
+  //           hasMainAvatarPromise,
+  //           timeoutPromise,
+  //         ]);
+
+  //         console.log("Has main avatar:", hasMainAvatar);
+  //         if (hasMainAvatar) {
+  //           console.log("Attempting to navigate to dashboard from AuthScreen");
+  //           await router.replace("/(tabs)/dashboard");
+  //         } else {
+  //           console.log("Attempting to navigate to onboarding from AuthScreen");
+  //           await router.replace("/onboarding/step1");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error during navigation from AuthScreen:", error);
+  //         // Navigate to onboarding if there's an error
+  //         await router.replace("/onboarding/step1");
+  //       }
+  //     }
+  //     setIsCheckingAvatar(false);
+  //   }
+
+  //   checkUserAndAvatar();
+  // }, [user, router]);
+
   const handleSignUp = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");

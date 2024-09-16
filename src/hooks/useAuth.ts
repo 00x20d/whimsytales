@@ -59,9 +59,9 @@ export const useAuth = () => {
           data.url,
           redirectUrl
         );
-        console.log("WebBrowser result:", result);
+        //console.log("WebBrowser result:", result);
         if (result.type === "success" && result.url) {
-          console.log("Auth session success, URL:", result.url);
+          //console.log("Auth session success, URL:", result.url);
           const accessToken = result.url
             .split("access_token=")[1]
             ?.split("&")[0];

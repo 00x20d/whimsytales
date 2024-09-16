@@ -17,6 +17,7 @@ import { setUser } from "../src/store/slices/authSlice";
 import { Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { checkMainAvatarExists } from "../src/utils/avatarUtils";
+import { useAuth } from "../src/hooks/useAuth";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,6 +32,23 @@ function AppContent() {
     PlayfairDisplay: require("../src/assets/fonts/PlayfairDisplay-Regular.ttf"),
     "PlayfairDisplay-Bold": require("../src/assets/fonts/PlayfairDisplay-Bold.ttf"),
   });
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          dispatch(setUser(session.user));
+        } else if (event === "SIGNED_OUT") {
+          dispatch(setUser(null));
+          await router.replace("/");
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, dispatch]);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(

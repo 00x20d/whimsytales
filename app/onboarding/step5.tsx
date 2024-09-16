@@ -17,7 +17,7 @@ export default function CreateCharacter() {
     console.log("Character created:", character);
     try {
       const { data, error } = await supabase
-        .from("avatars")
+        .from("Character")
         .insert({ ...character, user_id: user?.id, is_main: true });
 
       if (error) {
