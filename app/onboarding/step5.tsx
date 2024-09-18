@@ -7,12 +7,14 @@ import { useRouter } from "expo-router";
 import { supabase } from "../../src/lib/supabase";
 import { useSelector } from "react-redux";
 import { RootState } from "../../src/store/store";
+import { setMainCharacter } from "../../src/store/slices/userSlice";
+import { useDispatch } from "react-redux";
 
 export default function CreateCharacter() {
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
-
-  console.log("User in CreateCharacter:", user);
+  const dispatch = useDispatch();
+  //console.log("User in CreateCharacter:", user);
 
   const handleCharacterCreated = async (character: any) => {
     console.log("Attempting to create character:", character);
@@ -24,18 +26,22 @@ export default function CreateCharacter() {
     try {
       console.log("Inserting character for user:", user.id);
       const now = new Date().toISOString();
-      const { data, error } = await supabase.from("Character").insert({
-        ...character,
-        user_id: user.id,
-        is_main: true,
-        created_at: now,
-        updated_at: now,
-      });
+      const { data, error } = await supabase
+        .from("Character")
+        .insert({
+          ...character,
+          user_id: user.id,
+          is_main: true,
+          created_at: now,
+          updated_at: now,
+        })
+        .select();
 
       if (error) {
         console.error("Error creating character:", error);
       } else {
-        console.log("Character added to Supabase:", data);
+        console.log("Character added to Supabase:", data[0].name);
+        dispatch(setMainCharacter({ id: data[0].id, name: data[0].name }));
         console.log("Attempting to redirect to dashboard");
         router.replace("/(tabs)/dashboard");
       }

@@ -5,8 +5,9 @@ import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { useState } from "react";
-import { checkMainAvatarExists } from "../utils/avatarUtils";
+//import { useState } from "react";
+//import { checkMainAvatarExists } from "../utils/avatarUtils";
+import { setMainCharacter } from "../store/slices/userSlice";
 
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -70,11 +71,35 @@ export const useAuth = () => {
             await addUserToSupabase(user);
             dispatch(setUser(user));
 
-            //const hasMainCharacter = await checkMainAvatarExists(user.id);
-            // Navigation logic here
+            // Fetch main character
+            const { data: characterData, error: characterError } =
+              await supabase
+                .from("Character")
+                .select("id, name")
+                .eq("user_id", user.id)
+                .eq("is_main", true)
+                .single();
+
+            if (characterError) {
+              if (characterError.code === "PGRST116") {
+                // No main character found, redirect to onboarding
+                return { user, hasMainCharacter: false };
+              } else {
+                console.error("Error fetching main character:", characterError);
+              }
+            } else if (characterData) {
+              dispatch(
+                setMainCharacter({
+                  id: characterData.id,
+                  name: characterData.name,
+                })
+              );
+              return { user, hasMainCharacter: true };
+            }
           }
         }
       }
+      return { user: null, hasMainCharacter: false };
     } catch (error) {
       console.error("Error in signInWithGoogle:", error);
       dispatch(
@@ -82,6 +107,7 @@ export const useAuth = () => {
           error instanceof Error ? error.message : "An unknown error occurred"
         )
       );
+      return { user: null, hasMainCharacter: false };
     } finally {
       dispatch(setLoading(false));
     }

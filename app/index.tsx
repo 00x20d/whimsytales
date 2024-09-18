@@ -14,36 +14,56 @@ import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
 import { ActivityIndicator } from "react-native";
 import { supabase } from "../src/lib/supabase";
-import { checkMainAvatarExists } from "../src/utils/avatarUtils";
-
+import { useDispatch } from "react-redux";
+import { setMainCharacter } from "../src/store/slices/userSlice";
 const AuthScreen = () => {
   console.log("AuthScreen initialized");
-  //console.log("Supabase instance in AuthScreen:", supabase);
 
   const { signInWithGoogle, isLoading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isCheckingAvatar, setIsCheckingAvatar] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleGoogleSignIn = async () => {
+    const { user, hasMainCharacter } = await signInWithGoogle();
+    if (user) {
+      if (hasMainCharacter) {
+        router.replace("/(tabs)/dashboard");
+      } else {
+        router.replace("/onboarding/step1");
+      }
+    }
+  };
 
   useEffect(() => {
     async function checkUserAndAvatar() {
       if (user) {
         try {
           console.log("Checking user for main character:", user.id);
-          const hasMainAvatar = await checkMainAvatarExists(user.id);
-          console.log("Has main avatar:", hasMainAvatar);
-          if (hasMainAvatar) {
+          const { data: characterData, error: characterError } = await supabase
+            .from("Character")
+            .select("name")
+            .eq("user_id", user.id)
+            .eq("is_main", true)
+            .single();
+
+          if (characterError) {
+            if (characterError.code === "PGRST116") {
+              console.log("No main avatar found. Navigating to onboarding");
+              router.replace("/onboarding/step1");
+            } else {
+              console.error("Error fetching main character:", characterError);
+              router.replace("/onboarding/step1");
+            }
+          } else if (characterData) {
+            dispatch(setMainCharacter(characterData.name));
             console.log("Navigating to dashboard");
             router.replace("/(tabs)/dashboard");
-          } else {
-            console.log("No main avatar found. Navigating to onboarding");
-            router.replace("/onboarding/step1");
           }
         } catch (error) {
           console.error("Error during navigation:", error);
-          // If there's an error, navigate to onboarding as a fallback
-          console.log("Error occurred. Navigating to onboarding as fallback");
           router.replace("/onboarding/step1");
         } finally {
           setIsCheckingAvatar(false);
@@ -54,7 +74,7 @@ const AuthScreen = () => {
     }
 
     checkUserAndAvatar();
-  }, [user, router]);
+  }, [user, router, dispatch]);
 
   const handleSignUp = async () => {
     if (!email || !password) {
@@ -118,7 +138,7 @@ const AuthScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.button}
-          onPress={signInWithGoogle}
+          onPress={handleGoogleSignIn}
           disabled={isLoading}
         >
           <Text style={styles.buttonText}>

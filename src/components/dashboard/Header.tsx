@@ -3,8 +3,14 @@ import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS } from "../../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
 
 export default function Header() {
+  const mainCharacterName = useSelector(
+    (state: RootState) => state.user.mainCharacter?.name || "Adventurer"
+  );
+
   return (
     <ImageBackground
       source={require("../../assets/images/header_background.png")}
@@ -16,7 +22,7 @@ export default function Header() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hey, Jason!</Text>
+            <Text style={styles.greeting}>Hey, {mainCharacterName}!</Text>
             <Text style={styles.subGreeting}>
               Your imagination is a superpower - use it to create amazing things
               every day!
