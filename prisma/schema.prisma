@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -13,32 +7,33 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Character {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String   @db.Uuid
-  name       String
-  age        Int
-  interests  String[]
-  gender     String
-  is_main    Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user       User     @relation(fields: [user_id], references: [id])
-}
-
 model User {
-  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String      @unique
-  password_hash       String?
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String         @unique
   name                String?
   profile_picture_url String?
   auth_provider       String?
   auth_provider_id    String?
-  created_at          DateTime    @default(now())
-  updated_at          DateTime    @default(now()) @updatedAt
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @default(now()) @updatedAt
   stories             Story[]
   user_groups         UserGroup[]
-  Character           Character[]
+  characters          Character[]
+  notifications       Notification[]
+}
+
+model Character {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String           @db.Uuid
+  name       String
+  age        Int
+  interests  String[]
+  gender     String
+  is_main    Boolean          @default(true)
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+  user       User             @relation(fields: [user_id], references: [id])
+  stories    StoryCharacter[]
 }
 
 model Group {
@@ -70,23 +65,25 @@ model Moral {
 }
 
 model Story {
-  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String  @db.Uuid
-  group_id   String? @db.Uuid
-  title      String
-  content    String
-  play_count Int     @default(0)
-  clap_count Int     @default(0)
-
-  cover_image_url String?
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  user            User        @relation(fields: [user_id], references: [id])
-  group           Group?      @relation(fields: [group_id], references: [id])
-  story_parts     StoryPart[]
-  audio_files     AudioFile[]
-  moral_id        String?     @db.Uuid
-  moral           Moral?      @relation(fields: [moral_id], references: [id])
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String           @db.Uuid
+  group_id          String?          @db.Uuid
+  title             String
+  content           String
+  play_count        Int              @default(0)
+  clap_count        Int              @default(0)
+  cover_image_url   String?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+  user              User             @relation(fields: [user_id], references: [id])
+  group             Group?           @relation(fields: [group_id], references: [id])
+  story_parts       StoryPart[]
+  audio_files       AudioFile[]
+  moral_id          String?          @db.Uuid
+  moral             Moral?           @relation(fields: [moral_id], references: [id])
+  characters        StoryCharacter[]
+  generation_prompt String?
+  language          String           @default("en")
 }
 
 model StoryPart {
@@ -94,6 +91,7 @@ model StoryPart {
   story_id    String   @db.Uuid
   part_number Int
   content     String
+  image_url   String?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   story       Story    @relation(fields: [story_id], references: [id])
@@ -105,4 +103,23 @@ model AudioFile {
   file_url   String
   created_at DateTime @default(now())
   story      Story    @relation(fields: [story_id], references: [id])
+}
+
+model StoryCharacter {
+  story_id     String    @db.Uuid
+  character_id String    @db.Uuid
+  is_main      Boolean
+  story        Story     @relation(fields: [story_id], references: [id])
+  character    Character @relation(fields: [character_id], references: [id])
+
+  @@id([story_id, character_id])
+}
+
+model Notification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  content    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
 }

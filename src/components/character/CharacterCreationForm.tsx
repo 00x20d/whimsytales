@@ -8,8 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { COLORS, FONTS } from "../../../constants/theme";
-import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../hooks/useAuth";
+import { useCharacter } from "../../hooks/useCharacter";
 
 interface CharacterCreationFormProps {
   onSuccess: (data: any) => void;
@@ -21,7 +20,8 @@ export default function CharacterCreationForm({
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [interests, setInterests] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState<"boy" | "girl" | "">("");
+  const { createCharacter } = useCharacter();
 
   const handleCreateCharacter = async () => {
     if (!name || !age || !interests || !gender) {
@@ -30,13 +30,16 @@ export default function CharacterCreationForm({
     }
 
     const character = {
+      // Remove the id field, let Supabase generate it
       name,
       age: parseInt(age),
       interests: interests.split(",").map((interest) => interest.trim()),
       gender,
+      is_main: true,
     };
 
     try {
+      createCharacter(character);
       onSuccess(character);
     } catch (error) {
       console.error("Error creating character:", error);

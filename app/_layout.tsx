@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Slot, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import { Provider } from "react-redux";
@@ -17,11 +17,13 @@ import { setUser } from "../src/store/slices/authSlice";
 import { Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { checkMainAvatarExists } from "../src/utils/avatarUtils";
-import { useAuth } from "../src/hooks/useAuth";
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
+  console.log("AppContent initialized");
+  //console.log("Supabase instance in AppContent:", supabase);
+
   const router = useRouter();
   const colorScheme = useColorScheme();
   const dispatch = useDispatch();
@@ -34,52 +36,41 @@ function AppContent() {
   });
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          dispatch(setUser(session.user));
-        } else if (event === "SIGNED_OUT") {
-          dispatch(setUser(null));
-          await router.replace("/");
-        }
-      }
-    );
+    let authListener: { subscription: { unsubscribe: () => void } } | null =
+      null;
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router, dispatch]);
-
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        //console.log("Auth state changed:", event, session);
-        if (event === "SIGNED_IN" && session) {
-          //console.log("User signed in:", session.user);
-          dispatch(setUser(session.user));
-          try {
-            const hasMainAvatar = await checkMainAvatarExists(session.user.id);
-            console.log("Has main avatar:", hasMainAvatar);
-            if (hasMainAvatar) {
-              console.log("Attempting to navigate to dashboard");
-              await router.replace("/(tabs)/dashboard");
-            } else {
-              console.log("Attempting to navigate to onboarding");
-              await router.replace("/onboarding/step1");
+    const setupAuthListener = async () => {
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          if (event === "SIGNED_IN" && session) {
+            dispatch(setUser(session.user));
+            try {
+              const hasMainAvatar = await checkMainAvatarExists(
+                session.user.id
+              );
+              if (hasMainAvatar) {
+                await router.replace("/(tabs)/dashboard");
+              } else {
+                await router.replace("/onboarding/step1");
+              }
+            } catch (error) {
+              console.error("Error during navigation:", error);
             }
-          } catch (error) {
-            console.error("Error during navigation:", error);
+          } else if (event === "SIGNED_OUT") {
+            dispatch(setUser(null));
+            await router.replace("/");
           }
-        } else if (event === "SIGNED_OUT") {
-          console.log("User signed out");
-          dispatch(setUser(null));
-          await router.replace("/");
         }
-      }
-    );
+      );
+      authListener = listener;
+    };
+
+    setupAuthListener();
 
     return () => {
-      authListener.subscription.unsubscribe();
+      if (authListener) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, [router, dispatch]);
 
@@ -90,35 +81,33 @@ function AppContent() {
   }, [loaded]);
 
   useEffect(() => {
-    const handleDeepLink = async (event: { url: string }) => {
-      console.log("Received deep link:", event.url);
-      const url = new URL(event.url);
-      const path = url.pathname.slice(1);
-      const queryParams = Object.fromEntries(url.searchParams);
-
-      if (path === "auth/callback") {
-        if (queryParams.error) {
-          console.error("Auth error:", queryParams.error_description);
-          // Handle error (e.g., show error message to user)
-        } else {
-          const { data, error } = await supabase.auth.getSession();
-          if (data.session) {
-            dispatch(setUser(data.session.user));
-            router.replace("/onboarding/step1");
-          } else if (error) {
-            console.error("Session retrieval error:", error);
-            // Handle error (e.g., show error message to user)
-          }
-        }
-      }
-    };
-
-    Linking.addEventListener("url", handleDeepLink);
+    const subscription = Linking.addEventListener("url", handleDeepLink);
 
     return () => {
-      Linking.removeAllListeners("url");
+      subscription.remove();
     };
   }, [router, dispatch]);
+
+  const handleDeepLink = async (event: { url: string }) => {
+    console.log("Received deep link:", event.url);
+    const url = new URL(event.url);
+    const path = url.pathname.slice(1);
+    const queryParams = Object.fromEntries(url.searchParams);
+
+    if (path === "auth/callback") {
+      if (queryParams.error) {
+        console.error("Auth error:", queryParams.error_description);
+      } else {
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          dispatch(setUser(data.session.user));
+          router.replace("/onboarding/step1");
+        } else if (error) {
+          console.error("Session retrieval error:", error);
+        }
+      }
+    }
+  };
 
   if (!loaded) {
     return null;
@@ -139,7 +128,6 @@ function AppContent() {
     </ThemeProvider>
   );
 }
-
 export default function RootLayout() {
   return (
     <Provider store={store}>

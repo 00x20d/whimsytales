@@ -1,25 +1,31 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { COLORS, FONTS } from "../../constants/theme";
+import React, { useState } from "react";
+import { View, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CharacterSelection from "../../src/components/story/CharacterSelection";
+import { COLORS } from "../../constants/theme";
 
 export default function CreateScreen() {
+  const [step, setStep] = useState(1);
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
+
+  const handleCharacterSelection = (characters: string[]) => {
+    setSelectedCharacters(characters);
+    setStep(2);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Create Screen</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      {step === 1 && (
+        <CharacterSelection onContinue={handleCharacterSelection} />
+      )}
+      {/* Add more steps here as needed */}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: COLORS.primary,
-  },
-  text: {
-    fontFamily: FONTS.bold,
-    fontSize: 24,
-    color: COLORS.primary,
   },
 });

@@ -12,82 +12,49 @@ import {
 import { COLORS, FONTS } from "../constants/theme";
 import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/hooks/useAuth";
-import { useUser } from "@supabase/auth-helpers-react";
 import { ActivityIndicator } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import { checkMainAvatarExists } from "../src/utils/avatarUtils";
 
 const AuthScreen = () => {
-  const { signInWithGoogle, isLoading } = useAuth();
+  console.log("AuthScreen initialized");
+  //console.log("Supabase instance in AuthScreen:", supabase);
+
+  const { signInWithGoogle, isLoading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isCheckingAvatar, setIsCheckingAvatar] = useState(true);
   const router = useRouter();
-  const user = useUser();
 
   useEffect(() => {
     async function checkUserAndAvatar() {
-      //console.log("Checking user and avatar, user:", user);
       if (user) {
         try {
+          console.log("Checking user for main character:", user.id);
           const hasMainAvatar = await checkMainAvatarExists(user.id);
           console.log("Has main avatar:", hasMainAvatar);
           if (hasMainAvatar) {
-            console.log("Attempting to navigate to dashboard from AuthScreen");
-            await router.replace("/(tabs)/dashboard");
+            console.log("Navigating to dashboard");
+            router.replace("/(tabs)/dashboard");
           } else {
-            console.log("Attempting to navigate to onboarding from AuthScreen");
-            await router.replace("/onboarding/step1");
+            console.log("No main avatar found. Navigating to onboarding");
+            router.replace("/onboarding/step1");
           }
         } catch (error) {
-          console.error("Error during navigation from AuthScreen:", error);
+          console.error("Error during navigation:", error);
+          // If there's an error, navigate to onboarding as a fallback
+          console.log("Error occurred. Navigating to onboarding as fallback");
+          router.replace("/onboarding/step1");
+        } finally {
+          setIsCheckingAvatar(false);
         }
+      } else {
+        setIsCheckingAvatar(false);
       }
-      setIsCheckingAvatar(false);
     }
 
     checkUserAndAvatar();
   }, [user, router]);
-
-  // useEffect(() => {
-  //   async function checkUserAndAvatar() {
-  //     if (user) {
-  //       try {
-  //         console.log("Checking main avatar for user ID:", user.id);
-  //         const hasMainAvatarPromise = checkMainAvatarExists(user.id);
-
-  //         // Add a 5-second timeout
-  //         const timeoutPromise = new Promise((_, reject) =>
-  //           setTimeout(
-  //             () => reject(new Error("checkMainAvatarExists timed out")),
-  //             5000
-  //           )
-  //         );
-
-  //         const hasMainAvatar = await Promise.race([
-  //           hasMainAvatarPromise,
-  //           timeoutPromise,
-  //         ]);
-
-  //         console.log("Has main avatar:", hasMainAvatar);
-  //         if (hasMainAvatar) {
-  //           console.log("Attempting to navigate to dashboard from AuthScreen");
-  //           await router.replace("/(tabs)/dashboard");
-  //         } else {
-  //           console.log("Attempting to navigate to onboarding from AuthScreen");
-  //           await router.replace("/onboarding/step1");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error during navigation from AuthScreen:", error);
-  //         // Navigate to onboarding if there's an error
-  //         await router.replace("/onboarding/step1");
-  //       }
-  //     }
-  //     setIsCheckingAvatar(false);
-  //   }
-
-  //   checkUserAndAvatar();
-  // }, [user, router]);
 
   const handleSignUp = async () => {
     if (!email || !password) {

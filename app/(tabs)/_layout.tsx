@@ -37,6 +37,7 @@ export default function TabLayout() {
               <View style={styles.createButton}>
                 <Ionicons name='add' size={30} color={COLORS.primary} />
               </View>
+              <Text style={styles.text}>Create</Text>
             </View>
           ),
         }}
@@ -102,6 +103,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  text: {
+    color: COLORS.white,
+    marginTop: 8,
+    fontSize: 9,
+    fontFamily: FONTS.regular,
   },
   tabLabel: {
     fontSize: 9,

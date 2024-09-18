@@ -5,31 +5,42 @@ import { COLORS, FONTS } from "../../constants/theme";
 import CharacterCreationForm from "../../src/components/character/CharacterCreationForm";
 import { useRouter } from "expo-router";
 import { supabase } from "../../src/lib/supabase";
-import { useUser } from "@supabase/auth-helpers-react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../src/store/store";
 
 export default function CreateCharacter() {
   const router = useRouter();
-  const user = useUser();
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  console.log("User", user);
+  console.log("User in CreateCharacter:", user);
 
   const handleCharacterCreated = async (character: any) => {
-    console.log("Character created:", character);
+    console.log("Attempting to create character:", character);
+    if (!user) {
+      console.error("No user found");
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from("Character")
-        .insert({ ...character, user_id: user?.id, is_main: true });
+      console.log("Inserting character for user:", user.id);
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.from("Character").insert({
+        ...character,
+        user_id: user.id,
+        is_main: true,
+        created_at: now,
+        updated_at: now,
+      });
 
       if (error) {
-        console.error("Error creating avatar:", error);
-        console.log("Error", `Failed to create avatar: ${error.message}`);
+        console.error("Error creating character:", error);
       } else {
-        console.log("Avatar created successfully:", data);
+        console.log("Character added to Supabase:", data);
+        console.log("Attempting to redirect to dashboard");
         router.replace("/(tabs)/dashboard");
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      console.log("Error", "An unexpected error occurred");
     }
   };
 
